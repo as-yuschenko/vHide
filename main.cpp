@@ -54,6 +54,7 @@ int main()
     const char* path_carrier = "/valrond/1.mp4";
 
     int32_t  fd_hidden;
+    uint32_t size_new_mdat;
     const char* path_hidden = "/valrond/_1.mp4";
 
 
@@ -63,6 +64,7 @@ int main()
 
     uint8_t buff[BUFF_SIZE];
     uint32_t len;
+
 
 
     size_carrier = fsize(path_carrier);
@@ -113,9 +115,7 @@ int main()
     }
 
 
-
-
-
+    /*Create hidden*/
     fd_hidden = open(path_hidden, O_WRONLY | O_CREAT | O_TRUNC);
     if (fd_hidden < 0) return -1;
 
@@ -134,9 +134,32 @@ int main()
         write (fd_hidden, buff, len);
     }
 
+    /*mdat box size*/
+    size_new_mdat = __builtin_bswap32((uint32_t)size_vera + carrier_struct.mdat_size - carrier_struct.ftyp_size - 8);
+    write (fd_hidden, &size_new_mdat, 4);
 
-    bytes_to_read = carrier_struct.mdat_size;
-    lseek(fd_carrier, carrier_struct.mdat_offset, SEEK_SET);
+
+    /*mdat header*/
+    write (fd_hidden, MDAT, 4);
+
+    /*Gen and write random data*/
+    len = 0x10000 - 8 - carrier_struct.ftyp_size;
+    for (uint32_t i = 0; i < len; i++) buff[i] = rand() % 255;
+    write (fd_hidden, buff, len);
+
+    /*write vera w/o open volume header*/
+    bytes_to_read = size_vera - 0x10000;
+    lseek(fd_vera, 0x10000, SEEK_SET);
+    while (bytes_to_read > 0)
+    {
+        len = read(fd_vera, buff, (bytes_to_read <= BUFF_SIZE) ? bytes_to_read : BUFF_SIZE);
+        bytes_to_read -= len;
+        write (fd_hidden, buff, len);
+    }
+
+    /*mdat data*/
+    bytes_to_read = carrier_struct.mdat_size - 8;
+    lseek(fd_carrier, carrier_struct.mdat_offset + 8, SEEK_SET);
     while (bytes_to_read > 0)
     {
         len = read(fd_carrier, buff, (bytes_to_read <= BUFF_SIZE) ? bytes_to_read : BUFF_SIZE);
@@ -157,7 +180,8 @@ int main()
     /*stco 1*/
     for (uint32_t i = 0; i < carrier_struct.stco_1_chunk_num; i++)
     {
-        if (i > 1) new_stco_offset = __builtin_bswap32(carrier_struct.stco_1_chunks_offset[i] - carrier_struct.stco_1_chunks_offset[2] + carrier_struct.ftyp_size + 8);
+//        if (i > 1) new_stco_offset = __builtin_bswap32(carrier_struct.stco_1_chunks_offset[i] - carrier_struct.stco_1_chunks_offset[2] + carrier_struct.ftyp_size + 8);
+        if (i > 1) new_stco_offset = __builtin_bswap32(carrier_struct.stco_1_chunks_offset[i] - carrier_struct.stco_1_chunks_offset[2] + (uint32_t)size_vera);
         else new_stco_offset = __builtin_bswap32(carrier_struct.stco_1_chunks_offset[i]);
         write_all += write (fd_hidden, &new_stco_offset, 4);
     }
@@ -175,7 +199,8 @@ int main()
     /*stco 2*/
     for (uint32_t i = 0; i < carrier_struct.stco_2_chunk_num; i++)
     {
-        if (i > 1) new_stco_offset = __builtin_bswap32(carrier_struct.stco_2_chunks_offset[i] - carrier_struct.stco_1_chunks_offset[2] + carrier_struct.ftyp_size + 8);
+//        if (i > 1) new_stco_offset = __builtin_bswap32(carrier_struct.stco_2_chunks_offset[i] - carrier_struct.stco_1_chunks_offset[2] + carrier_struct.ftyp_size + 8);
+        if (i > 1) new_stco_offset = __builtin_bswap32(carrier_struct.stco_2_chunks_offset[i] - carrier_struct.stco_1_chunks_offset[2] + (uint32_t)size_vera);
         else new_stco_offset = __builtin_bswap32(carrier_struct.stco_2_chunks_offset[i]);
         write_all += write (fd_hidden, &new_stco_offset, 4);
     }
