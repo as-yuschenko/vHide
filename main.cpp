@@ -17,6 +17,8 @@
 #define STCO        "stco"
 #define MDAT        "mdat"
 
+
+
 #define BUFF_SIZE   2000000
 uint64_t fsize(const char* path);
 uint8_t BoxInfo(int32_t* fd, uint64_t* fsize, uint64_t offset, const char* name, uint64_t* boxOffset, uint32_t* boxSize);
@@ -45,17 +47,20 @@ struct mp4
     uint32_t* stco_2_chunks_offset;
 
 };
+
+uint8_t ParseMP4(const char* path, mp4* _mp4);
+
 int main()
 {
     mp4 carrier_struct;
 
     int32_t  fd_carrier;
     uint64_t size_carrier;
-    const char* path_carrier = "/valrond/1.mp4";
+    const char* path_carrier = "/valrond/jQuery.mp4";
 
     int32_t  fd_hidden;
     uint32_t size_new_mdat;
-    const char* path_hidden = "/valrond/_1.mp4";
+    const char* path_hidden = "/valrond/_jQuery.mp4";
 
 
     int32_t  fd_vera;
@@ -83,10 +88,7 @@ int main()
 
 
     uint64_t offset = 0;
-
-    BoxInfo(&fd_carrier, &size_carrier, offset, FTYP, &carrier_struct.ftyp_offset, &carrier_struct.ftyp_size);
-    BoxInfo(&fd_carrier, &size_carrier, offset, MOOV, &carrier_struct.moov_offset, &carrier_struct.moov_size);
-    BoxInfo(&fd_carrier, &size_carrier, offset, MDAT, &carrier_struct.mdat_offset, &carrier_struct.mdat_size);
+    ParseMP4(path_carrier, &carrier_struct);
 
     offset = carrier_struct.moov_offset;
 
@@ -111,7 +113,7 @@ int main()
     {
         read(fd_carrier, buff, 4);
         carrier_struct.stco_2_chunks_offset[i] = __builtin_bswap32(*((int32_t*)(buff)));
-        //printf("\n%04x\n", carrier_struct.stco_2_chunks_offset[i]);
+//        printf("\n%04x\n", carrier_struct.stco_2_chunks_offset[i]);
     }
 
 
@@ -217,16 +219,69 @@ int main()
 
     return 0;
 }
+uint8_t ParseMP4(const char* path, mp4* _mp4)
+{
+
+    uint32_t fd;
+    uint64_t flen;
+    uint8_t buff[4];
+    uint64_t offset = 0;
+    uint32_t box_size;
+
+    flen = fsize(path);
+    if (flen < 1) return -1;
+
+    fd = open(path, O_RDONLY);
+    if (fd < 0) return -1;
+
+
+    while (offset < flen)
+    {
+        //box size
+        lseek(fd, offset, SEEK_SET);
+        if (read(fd, buff, 4) != 4) return -1;
+        box_size = __builtin_bswap32(*((int32_t*)(buff)));
+
+        //box name
+        lseek(fd, offset + 4, SEEK_SET);
+        if (read(fd, buff, 4) != 4) return -1;
+
+        if      (!memcmp(FTYP, buff, 4))
+        {
+            _mp4->ftyp_offset = offset;
+            _mp4->ftyp_size = box_size;
+            printf("ftyp\n\toffset:%llu\tsize:%u\n\n", _mp4->ftyp_offset, _mp4->ftyp_size);
+        }
+        else if (!memcmp(MOOV, buff, 4))
+        {
+            _mp4->moov_offset = offset;
+            _mp4->moov_size = box_size;
+                        printf("moov\n\toffset:%llu\tsize:%u\n\n", _mp4->moov_offset, _mp4->moov_size);
+        }
+        else if (!memcmp(MDAT, buff, 4))
+        {
+            _mp4->mdat_offset = offset;
+            _mp4->mdat_size = box_size;
+                        printf("mdat\n\toffset:%llu\tsize:%u\n\n", _mp4->mdat_offset, _mp4->mdat_size);
+        }
+
+        offset += box_size;
+    }
+    close(fd);
+    return 0;
+
+}
 uint8_t BoxInfo(int32_t* fd, uint64_t* fsize, uint64_t offset, const char* name, uint64_t* boxOffset, uint32_t* boxSize)
 {
     uint8_t buff[4];
 
     lseek(*fd, offset, SEEK_SET);
 
-    while(*fsize - offset > 0)
+    while(*fsize - offset > 1)
     {
         read(*fd, buff, 1);
         offset++;
+        //printf("%c", buff[0]);
         if (buff[0] == name[0])
         {
             read(*fd, buff, 1);
@@ -246,8 +301,8 @@ uint8_t BoxInfo(int32_t* fd, uint64_t* fsize, uint64_t offset, const char* name,
                         lseek(*fd, *boxOffset, SEEK_SET);
                         read(*fd, buff, 4);
                         *boxSize = __builtin_bswap32(*((int32_t*)(buff)));
-//                        printf("%llu\n", *boxOffset);
-//                        printf("%u\n", *boxSize);
+                        printf("%llu\n", *boxOffset);
+                        printf("%u\n", *boxSize);
                         return 0;
                     }
                 }
