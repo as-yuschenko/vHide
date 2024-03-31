@@ -9,8 +9,6 @@
 #include "vMP4.h"
 #include "help.h"
 
-
-
 #define BUFF_SIZE   2000000
 #define OPN_VOL_HDR_SZ   0x10000
 
