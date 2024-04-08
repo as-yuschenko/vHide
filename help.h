@@ -7,7 +7,8 @@ SYNOPSYS\n\
 \tvHide -h\n\n\
 DESCRIPTION\n\
 \tvHide allows to encapsulate a hidden veracrypt container into a video file.\n\
-\tVideo file continues to play normally after encapsulation.\n\n\
+\tVideo file continues to play normally after encapsulation.\n\
+\tResulting file size cannot exceed 4294 MB.\n\n\
 \tATTENTION! mp4 video file and veracrypt container will be REMOVED!\n\
 \tNormal part of the veracrypt container will be LOST!\n\n\
 \tPlease, make copy if you need before using.\n\n\

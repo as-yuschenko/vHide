@@ -13,7 +13,6 @@ mp4_tree*   mp4_tree_new()
 {
     return new mp4_tree;
 };
-
 void        mp4_tree_free(mp4_tree* p_mp4_tree)
 {
     for (uint8_t i = 0; i < p_mp4_tree->moov.traks_num; i++)
@@ -24,8 +23,6 @@ void        mp4_tree_free(mp4_tree* p_mp4_tree)
     delete p_mp4_tree;
     return;
 };
-
-
 uint8_t     mp4_parse(const char* path, mp4_tree* p_mp4_tree)
 {
     uint32_t fd;
@@ -44,16 +41,13 @@ uint8_t     mp4_parse(const char* path, mp4_tree* p_mp4_tree)
     fd = open(path, O_RDONLY);
     if (fd < 0) return -1;
 
-    /*parse main boxes*/
     offset = 0;
     while (offset < flen)
     {
-        //box size
         lseek(fd, offset, SEEK_SET);
         if (read(fd, buff, 4) != 4) return -1;
         box_size = __builtin_bswap32(*((int32_t*)(buff)));
 
-        //box name
         lseek(fd, offset + 4, SEEK_SET);
         if (read(fd, buff, 4) != 4) return -1;
 
@@ -83,18 +77,13 @@ uint8_t     mp4_parse(const char* path, mp4_tree* p_mp4_tree)
         offset += box_size;
     }
 
-    /*parse moov*/
-
-    //obtain traks num
     offset = p_mp4_tree->moov.offset + 8;
     while (offset < p_mp4_tree->moov.offset + p_mp4_tree->moov.size)
     {
-        //box size
         lseek(fd, offset, SEEK_SET);
         if (read(fd, buff, 4) != 4) return -1;
         box_size = __builtin_bswap32(*((int32_t*)(buff)));
 
-        //box name
         lseek(fd, offset + 4, SEEK_SET);
         if (read(fd, buff, 4) != 4) return -1;
 
@@ -102,21 +91,17 @@ uint8_t     mp4_parse(const char* path, mp4_tree* p_mp4_tree)
         offset += box_size;
     }
 
-    //alloc mem
     p_mp4_tree->moov.traks = new b_trak[p_mp4_tree->moov.traks_num];
 
-    //fill traks data
     uint8_t trak_num = 0;
 
     offset = p_mp4_tree->moov.offset + 8;
     while (offset < p_mp4_tree->moov.offset + p_mp4_tree->moov.size)
     {
-        //box size
         lseek(fd, offset, SEEK_SET);
         if (read(fd, buff, 4) != 4) return -1;
         box_size = __builtin_bswap32(*((int32_t*)(buff)));
 
-        //box name
         lseek(fd, offset + 4, SEEK_SET);
         if (read(fd, buff, 4) != 4) return -1;
 
@@ -130,19 +115,16 @@ uint8_t     mp4_parse(const char* path, mp4_tree* p_mp4_tree)
         offset += box_size;
     }
 
-    //parse traks
+
     for (uint8_t t = 0; t < p_mp4_tree->moov.traks_num; t++)
     {
-        //parse mdia
         offset = p_mp4_tree->moov.traks[t].offset + 8;
         while (offset < p_mp4_tree->moov.traks[t].offset + p_mp4_tree->moov.traks[t].size)
         {
-            //box size
             lseek(fd, offset, SEEK_SET);
             if (read(fd, buff, 4) != 4) return -1;
             box_size = __builtin_bswap32(*((int32_t*)(buff)));
 
-            //box name
             lseek(fd, offset + 4, SEEK_SET);
             if (read(fd, buff, 4) != 4) return -1;
 
@@ -155,16 +137,13 @@ uint8_t     mp4_parse(const char* path, mp4_tree* p_mp4_tree)
             offset += box_size;
         }
 
-        //parse minf
         offset = p_mp4_tree->moov.traks[t].mdia.offset + 8;
         while (offset < p_mp4_tree->moov.traks[t].mdia.offset + p_mp4_tree->moov.traks[t].mdia.size)
         {
-            //box size
             lseek(fd, offset, SEEK_SET);
             if (read(fd, buff, 4) != 4) return -1;
             box_size = __builtin_bswap32(*((int32_t*)(buff)));
 
-            //box name
             lseek(fd, offset + 4, SEEK_SET);
             if (read(fd, buff, 4) != 4) return -1;
 
@@ -177,16 +156,14 @@ uint8_t     mp4_parse(const char* path, mp4_tree* p_mp4_tree)
             offset += box_size;
         }
 
-        //parse stbl
         offset = p_mp4_tree->moov.traks[t].mdia.minf.offset + 8;
         while (offset < p_mp4_tree->moov.traks[t].mdia.minf.offset + p_mp4_tree->moov.traks[t].mdia.minf.size)
         {
-            //box size
+
             lseek(fd, offset, SEEK_SET);
             if (read(fd, buff, 4) != 4) return -1;
             box_size = __builtin_bswap32(*((int32_t*)(buff)));
 
-            //box name
             lseek(fd, offset + 4, SEEK_SET);
             if (read(fd, buff, 4) != 4) return -1;
 
@@ -199,16 +176,13 @@ uint8_t     mp4_parse(const char* path, mp4_tree* p_mp4_tree)
             offset += box_size;
         }
 
-        //parse stco
         offset = p_mp4_tree->moov.traks[t].mdia.minf.stbl.offset + 8;
         while (offset < p_mp4_tree->moov.traks[t].mdia.minf.stbl.offset + p_mp4_tree->moov.traks[t].mdia.minf.stbl.size)
         {
-            //box size
             lseek(fd, offset, SEEK_SET);
             if (read(fd, buff, 4) != 4) return -1;
             box_size = __builtin_bswap32(*((int32_t*)(buff)));
 
-            //box name
             lseek(fd, offset + 4, SEEK_SET);
             if (read(fd, buff, 4) != 4) return -1;
 
@@ -221,7 +195,6 @@ uint8_t     mp4_parse(const char* path, mp4_tree* p_mp4_tree)
             offset += box_size;
         }
 
-        //get stco chunks info
         p_mp4_tree->moov.traks[t].mdia.minf.stbl.stco.chunks_num = (p_mp4_tree->moov.traks[t].mdia.minf.stbl.stco.size - 8) / 4;
         p_mp4_tree->moov.traks[t].mdia.minf.stbl.stco.chunks_offsets = new uint32_t [p_mp4_tree->moov.traks[t].mdia.minf.stbl.stco.chunks_num];
         lseek(fd, p_mp4_tree->moov.traks[t].mdia.minf.stbl.stco.offset + 8, SEEK_SET);
@@ -236,8 +209,6 @@ uint8_t     mp4_parse(const char* path, mp4_tree* p_mp4_tree)
     close(fd);
     return 0;
 };
-
-
 void        mp4_tree_show(mp4_tree* p_mp4_tree)
 {
     printf("ftyp offset:%llu size:%u\n", p_mp4_tree->ftyp.offset, p_mp4_tree->ftyp.size);
@@ -249,7 +220,7 @@ void        mp4_tree_show(mp4_tree* p_mp4_tree)
         printf("\ttrak%u offset:%llu size:%u\n\n", t, p_mp4_tree->moov.traks[t].offset, p_mp4_tree->moov.traks[t].size);
 
         for (uint32_t c = 0; c < p_mp4_tree->moov.traks[t].mdia.minf.stbl.stco.chunks_num; c++)
-        printf("\t\t\tchunk %u : %x\n", c, p_mp4_tree->moov.traks[t].mdia.minf.stbl.stco.chunks_offsets[c]);
+            printf("\t\t\tchunk %u : %x\n", c, p_mp4_tree->moov.traks[t].mdia.minf.stbl.stco.chunks_offsets[c]);
 
     }
 };
