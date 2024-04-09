@@ -1,3 +1,31 @@
+/*
+MIT License
+
+Copyright (c) 2024 Aleksandr Yuschenko
+
+Support
+https://t.me/Alex_Yuschenko
+https://vsyst.ru
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
 #include <stdio.h>
 #include <unistd.h>
 #include <cstring>
@@ -9,7 +37,7 @@
 #include "vMP4.h"
 #include "help.h"
 
-#define BUFF_SIZE           2000000
+#define BUFF_SIZE           5000000
 #define OPN_VOL_HDR_SZ      0x10000
 #define MAX_FILE_SIZE       4294000000
 #define ERROR               "\nERROR\n%s\n"
@@ -48,6 +76,7 @@ int main(int argc, char** argv)
     uint8_t buff[BUFF_SIZE];
     uint32_t len;
 
+    printf("\nParsing video file...");
 
     tree_mp4 = mp4_tree_new();
     if (mp4_parse(path_video, tree_mp4))
@@ -69,11 +98,13 @@ int main(int argc, char** argv)
         printf(ERROR, "MP4 file open");
         return -1;
     }
+    printf("OK!\n");
 
+    printf("Parsing veracrypt file...");
     size_vera = (!stat(path_vera, &finfo)) ? (uint64_t)finfo.st_size : 0;
     if (size_vera < OPN_VOL_HDR_SZ * 2)
     {
-        printf(ERROR, "Container file size is too low");
+        printf(ERROR, "Veracrypt file size is too low");
         return -1;
     }
 
@@ -86,10 +117,13 @@ int main(int argc, char** argv)
     fd_vera = open(path_vera, O_RDONLY);
     if (fd_vera < 0)
     {
-        printf(ERROR, "Container file open");
+        printf(ERROR, "Veracrypt file open");
         return -1;
     }
+    printf("OK!\n");
 
+
+    printf("Please wait.\nMaking resulting file...");
 
     len = strlen(path_vera) + 5;
     path_hidden = new char[len];
@@ -196,6 +230,7 @@ int main(int argc, char** argv)
 
     mp4_tree_free(tree_mp4);
 
+    printf("OK!\n");
     return 0;
 }
 
