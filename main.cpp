@@ -79,9 +79,9 @@ int main(int argc, char** argv)
     printf("\nParsing video file...");
 
     tree_mp4 = mp4_tree_new();
-    if (mp4_parse(path_video, tree_mp4))
+    if ((mp4_parse(path_video, tree_mp4)) || (tree_mp4->mdat.offset + 8 != tree_mp4->moov.traks[0].mdia.minf.stbl.stco.chunks_offsets[2]))
     {
-        printf(ERROR, "MP4 file parsing faild");
+        printf(ERROR, "MP4 file parsing faild, please try to use another");
         return -1;
     }
 
