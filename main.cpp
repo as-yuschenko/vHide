@@ -122,7 +122,6 @@ int main(int argc, char** argv)
     }
     printf("OK!\n");
 
-
     printf("Please wait.\nMaking resulting file...");
 
     len = strlen(path_vera) + 5;
