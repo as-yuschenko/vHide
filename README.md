@@ -11,7 +11,8 @@ Video file continues to play normally after encapsulation.
 + Resulting file size cannot exceed 4294 MB.
 + mp4 video file and veracrypt file will be **REMOVED!**
 + Normal part of the veracrypt container will be **LOST!**
-Please, make copy if you need before using.
+
+<br />Please, **make copy if you need** before using.
 ## OPTIONS
 No.
 ## PARAMETRS
