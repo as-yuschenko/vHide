@@ -70,12 +70,14 @@ uint8_t     mp4_parse(const char* path, mp4_tree* p_mp4_tree)
         }
         else if (!memcmp(FREE, buff, 4))
         {
-            p_mp4_tree->mdat.offset = offset;
-            p_mp4_tree->mdat.size = box_size;
+            p_mp4_tree->free.offset = offset;
+            p_mp4_tree->free.size = box_size;
         }
 
         offset += box_size;
     }
+
+    if (p_mp4_tree->mdat.size < (flen / 3) * 2) return -1;
 
     offset = p_mp4_tree->moov.offset + 8;
     while (offset < p_mp4_tree->moov.offset + p_mp4_tree->moov.size)
